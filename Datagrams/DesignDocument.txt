@@ -1,0 +1,101 @@
+------------------------------------------------------------
+
+Name :- Siddharth Nahar
+Entry No :- 2016csb1043
+Date :- 26/11/18
+
+------------------------------------------------------------
+
+*To Create DataGram Socket and Client :-
+
+
+	InetAddress inet = InetAddress.getByName(ip);
+	DatagramSocket socket = new DatagramSocket(port, inet);
+
+-----------------------------------------------------------------
+
+*Created Class for Sending Object Data to Sever and retrning back
+
+	public DataPacket(int n, String z){
+
+		/*Initialise DataSequence number*/
+		this.n = n;
+		Random rand = new Random();
+
+		/*Initialize x, y with random floats*/
+		this.x = rand.nextFloat()*100;
+		this.y = rand.nextFloat()*100;
+
+		if(z == null){
+			/*Create Random String Generator Object for creation of Random String between 20,50 characters*/
+			RandomStringGenerator generator = new RandomStringGenerator.Builder().withinRange('a', 'z').build();
+			this.z = generator.generate(20, 50);
+		}else{
+
+			/*Assign Randomly OK or Error to Z*/
+			this.z = z;
+		}
+
+	}
+
+---------------------------------------------------------------------------------
+
+*Used SerializeUtils to convert object to byte array and vice versa
+
+
+	byte[] response = pack.getData();
+
+	//
+	DataPacket res = SerializationUtils.deserialize(response);
+	System.out.print("Recieved from IP "+pack.getAddress()+": ");
+
+	byte[] buff = SerializationUtils.serialize(objSend);
+
+-------------------------------------------------------------------------------------
+
+*Approached MultiThreading for more Clients to handle and more Requests
+
+/*Implemented Threading for Handling of large requests*/
+class RequestHandler extends Thread{
+
+	private DatagramPacket pack;
+	private DatagramSocket sock;
+
+	RequestHandler(DatagramPacket pack, DatagramSocket socket){
+
+		this.pack = pack;
+		this.sock = socket;
+	}
+
+	public void run(){
+
+		try{
+			/*Deserialize the input recieved from Client*/
+			byte[] response = pack.getData();
+
+			//
+			DataPacket res = SerializationUtils.deserialize(response);
+			System.out.print("Recieved from IP "+pack.getAddress()+": ");
+			res.print();
+			/*Select Randomly between OK and ERROR*/
+			
+			String sendVal = (Math.random() <= 0.5 ? "OK" : "ERROR");
+			byte[] sendData = SerializationUtils.serialize(new DataPacket(res.n, sendVal));
+			//System.out.println(Arrays.toString(sendData)+ " ->"+sendData.length);
+			//byte[] buff = {12, 15};
+			DatagramPacket sendPack = new DatagramPacket(sendData,sendData.length, pack.getAddress(), pack.getPort());
+			sock.send(sendPack);
+			
+
+		}catch(Exception e){
+
+			System.out.println(e.getMessage());
+
+		}
+	}
+
+}
+
+-------------------------------------------------------------------------------------------------------
+
+*Results of Two Observation are included in Readme			
